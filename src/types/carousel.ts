@@ -49,6 +49,12 @@ export interface SlideElement {
   letterSpacing?: number;
   lineHeight?: number;
   radius?: number;
+  /** Code language for syntax highlighting (code elements). */
+  language?: string;
+  /** Path into Slide.data that this element edits, e.g. "headline" or "keyTakeaways.1". */
+  dataKey?: string;
+  /** Render **bold** markers as bold keywords. */
+  rich?: boolean;
 }
 
 export type SlideType = "hook" | "content" | "code_breakdown" | "comparison" | "cta";
@@ -66,6 +72,38 @@ export interface Slide {
   elements: SlideElement[];
   background: SlideBackground;
   notes: string;
+  /** Structured content payload this slide was built from (keeps text when templates change). */
+  data?: SlideData;
+}
+
+export type Archetype = "code_syntax" | "tech_update" | "comparison_diff" | "deep_dive" | "hook" | "cta";
+
+export interface SlideData {
+  slideNumber: number;
+  archetype: Archetype;
+  headerBadge?: string;
+  headline: string;
+  subheadline?: string;
+  definition?: string;
+  syntaxSnippet?: string;
+  codeExample?: { language: string; code: string; output: string };
+  comparisonData?: { leftTitle: string; leftContent: string[]; rightTitle: string; rightContent: string[] };
+  comparisonMode?: "old_vs_new" | "a_vs_b";
+  verdict?: string;
+  proTipOrGotcha?: string;
+  tipKind?: "gotcha" | "tip";
+  keyTakeaways?: string[];
+  // hook
+  difficulty?: string;
+  readTime?: string;
+  // tech update
+  whatChanged?: string;
+  impactMetric?: string;
+  whyItMatters?: string;
+  beforeAfter?: { before: string; after: string };
+  // deep dive
+  icon?: string;
+  useCase?: string;
 }
 
 export interface CarouselProject {
