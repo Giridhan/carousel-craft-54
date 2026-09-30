@@ -1,7 +1,9 @@
 import { toPng, toJpeg } from "html-to-image";
 import { jsPDF } from "jspdf";
 import JSZip from "jszip";
-import { saveAs } from "file-saver";
+import FileSaver from "file-saver";
+
+const saveAs = FileSaver.saveAs;
 import type { AspectRatio } from "@/types/carousel";
 import { CANVAS_SIZES } from "@/types/carousel";
 
