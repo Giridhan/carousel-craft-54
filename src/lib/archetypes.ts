@@ -220,10 +220,10 @@ export function buildFromData(d: SlideData, ctx: ArchCtx): Slide {
       }
       const code = d.codeExample?.code ?? "";
       const out = d.codeExample?.output;
-      const reserve = (out ? 90 : 0) + (d.proTipOrGotcha ? 150 * s : 0);
+      const reserve = (out ? 70 : 0) + (d.proTipOrGotcha ? 125 * s : 0);
       const budget = Math.max(220, bottom - y - reserve - 10);
       if (code) {
-        const size = fit(code, W - 80 - 70, budget - 130, 30, 15, 1.55);
+        const size = fit(code, W - 80 - 70, budget - 120, 30, 18, 1.55);
         const hh = Math.min(budget, Math.ceil(textHeight(code, size, W - 80, 1.55)) + 140);
         push({
           type: "code",
