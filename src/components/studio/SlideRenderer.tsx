@@ -206,7 +206,6 @@ export function SlideRenderer({
                     style={{ width: 16, height: 16, borderRadius: 8, background: c, display: "block" }}
                   />
                 ))}
-              </div>
                 {el.language && (
                   <span
                     style={{
@@ -248,6 +247,7 @@ export function SlideRenderer({
                   style={{ margin: 0, flex: 1, minWidth: 0, color: el.color, whiteSpace: "pre-wrap", font: "inherit" }}
                   dangerouslySetInnerHTML={{ __html: highlight(el.content, el.language) }}
                 />
+              </div>
             </div>
           );
         } else {

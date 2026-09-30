@@ -143,3 +143,12 @@
     color: var(--color-foreground);
   }
 }
+
+/* Syntax colours for code windows on slides (dark IDE palette, exported with the image) */
+.cf-code .token.comment, .cf-code .token.prolog { color: #64748b; font-style: italic; }
+.cf-code .token.string, .cf-code .token.char, .cf-code .token.attr-value { color: #86efac; }
+.cf-code .token.keyword, .cf-code .token.important, .cf-code .token.atrule { color: #c4b5fd; }
+.cf-code .token.function, .cf-code .token.class-name { color: #7dd3fc; }
+.cf-code .token.number, .cf-code .token.boolean, .cf-code .token.constant { color: #fca5a5; }
+.cf-code .token.operator, .cf-code .token.punctuation { color: #cbd5e1; }
+.cf-code .token.builtin, .cf-code .token.decorator, .cf-code .token.annotation { color: #fcd34d; }
