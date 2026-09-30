@@ -24,7 +24,8 @@ import {
 import { toast } from "sonner";
 import { useStudio } from "@/store/studio";
 import { FILTER_TAGS, TEMPLATES } from "@/lib/templates";
-import { TONES, streamGeneration, type Tone } from "@/lib/generator";
+import { GEN_STEPS, TONES, type Tone } from "@/lib/generator";
+import { generateCarousel } from "@/lib/ai.functions";
 
 function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
@@ -88,10 +89,28 @@ export function LeftPanel() {
 
   const runGenerate = async () => {
     setGenerating(true);
-    await streamGeneration(topic, count, pushLog);
-    generate(topic, count, tone);
-    setGenerating(false);
-    toast.success(`Generated ${count} slides for "${topic}"`);
+    const steps = GEN_STEPS(topic, count);
+    let i = 0;
+    pushLog(steps[i++]!);
+    const ticker = setInterval(() => {
+      if (i < steps.length) pushLog(steps[i++]!);
+    }, 1600);
+    try {
+      const res = await generateCarousel({ data: { topic: topic.trim() || "Your Topic", count, tone } });
+      if (res.ok) {
+        generate(topic, count, tone, { slides: res.slides, category: res.category, title: res.title });
+        toast.success(`Generated ${res.slides.length} slides for "${topic}"`);
+      } else {
+        generate(topic, count, tone);
+        toast.warning(`${res.error} Showing built-in sample content instead.`);
+      }
+    } catch {
+      generate(topic, count, tone);
+      toast.warning("Couldn't reach AI — showing built-in sample content instead.");
+    } finally {
+      clearInterval(ticker);
+      setGenerating(false);
+    }
   };
 
   return (

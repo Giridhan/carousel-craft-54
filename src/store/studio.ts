@@ -4,15 +4,17 @@ import type {
   BrandKit,
   CarouselProject,
   Slide,
+  SlideData,
   SlideElement,
 } from "@/types/carousel";
 import { getTemplate, TEMPLATES } from "@/lib/templates";
-import { buildSlide, reflowSlides, uid } from "@/lib/layout-engine";
-import { categoryFor, generateRaw, titleFor, type Tone } from "@/lib/generator";
+import { uid } from "@/lib/layout-engine";
+import { applyEditToData, buildFromData, reflowSlides } from "@/lib/archetypes";
+import { categoryFor, generateMock, titleFor, type Tone } from "@/lib/generator";
 import { autoFixProject } from "@/lib/preflight";
 
 const BRAND_KEY = "carouselfy.brandkits";
-const PROJECT_KEY = "carouselfy.project";
+const PROJECT_KEY = "carouselfy.project.v2";
 
 export const DEFAULT_BRAND: BrandKit = {
   id: "bk_default",
@@ -57,12 +59,13 @@ function makeProject(
   templateId: string,
   brand: BrandKit,
   ratio: AspectRatio,
+  ai?: GeneratedResult,
 ): CarouselProject {
   const tpl = getTemplate(templateId);
-  const raws = generateRaw(topic, count, tone);
-  const category = categoryFor(topic);
+  const raws = ai?.slides ?? generateMock(topic, count, tone);
+  const category = ai?.category ?? categoryFor(topic);
   const slides = raws.map((raw, i) =>
-    buildSlide(raw, {
+    buildFromData(raw, {
       tpl,
       brand,
       ratio,
@@ -75,8 +78,9 @@ function makeProject(
   );
   return {
     id: uid("proj"),
-    title: titleFor(topic),
+    title: ai?.title ?? titleFor(topic),
     topic,
+    category,
     aspectRatio: ratio,
     templateId,
     slides,
@@ -84,6 +88,12 @@ function makeProject(
     showWatermark: true,
     showProgress: true,
   };
+}
+
+export interface GeneratedResult {
+  slides: SlideData[];
+  category?: string | undefined;
+  title?: string | undefined;
 }
 
 interface StudioState {
@@ -106,7 +116,7 @@ interface StudioState {
   deleteBrandKit: (id: string) => void;
 
   setProject: (p: CarouselProject) => void;
-  generate: (topic: string, count: number, tone: Tone) => void;
+  generate: (topic: string, count: number, tone: Tone, ai?: GeneratedResult) => void;
   applyTemplate: (templateId: string) => void;
   setAspectRatio: (r: AspectRatio) => void;
   toggleChrome: (key: "showWatermark" | "showProgress") => void;
@@ -201,8 +211,8 @@ export const useStudio = create<StudioState>((set, get) => {
       persist();
     },
 
-    generate: (topic, count, tone) => {
-      const p = makeProject(topic, count, tone, get().project.templateId, get().brand(), get().project.aspectRatio);
+    generate: (topic, count, tone, ai) => {
+      const p = makeProject(topic, count, tone, get().project.templateId, get().brand(), get().project.aspectRatio, ai);
       set({ project: p, activeSlide: 0, selectedElementId: null });
       persist();
     },
@@ -214,7 +224,7 @@ export const useStudio = create<StudioState>((set, get) => {
         tpl,
         brand: get().brand(),
         ratio: p.aspectRatio,
-        category: categoryFor(p.topic),
+        category: p.category ?? categoryFor(p.topic),
         watermark: p.showWatermark,
         progress: p.showProgress,
       });
@@ -239,15 +249,22 @@ export const useStudio = create<StudioState>((set, get) => {
     addSlide: () => {
       const p = get().project;
       const tpl = getTemplate(p.templateId);
-      const slide = buildSlide(
-        { type: "content", title: "New slide title", body: "Double-click any text on the canvas to edit it." },
+      const slide = buildFromData(
+        {
+          slideNumber: p.slides.length + 1,
+          archetype: "deep_dive",
+          icon: "sparkles",
+          headerBadge: "NEW SLIDE",
+          headline: "New slide title",
+          definition: "Double-click any text on the canvas to edit it.",
+        },
         {
           tpl,
           brand: get().brand(),
           ratio: p.aspectRatio,
           index: p.slides.length,
           total: p.slides.length + 1,
-          category: categoryFor(p.topic),
+          category: p.category ?? categoryFor(p.topic),
           watermark: p.showWatermark,
           progress: p.showProgress,
         },
@@ -290,7 +307,14 @@ export const useStudio = create<StudioState>((set, get) => {
       withSlides((s) =>
         s.map((sl, idx) =>
           idx === get().activeSlide
-            ? { ...sl, elements: sl.elements.map((e) => (e.id === id ? { ...e, ...patch } : e)) }
+            ? (() => {
+                const target = sl.elements.find((e) => e.id === id);
+                const data =
+                  sl.data && target?.dataKey && typeof patch.content === "string" && patch.content !== target.content
+                    ? applyEditToData(sl.data, target.dataKey, patch.content)
+                    : sl.data;
+                return { ...sl, data, elements: sl.elements.map((e) => (e.id === id ? { ...e, ...patch } : e)) };
+              })()
             : sl,
         ),
       ),

@@ -33,7 +33,7 @@ export function autoFit(text: string, box: { width: number; height: number }, st
   return size;
 }
 
-function el(e: Partial<SlideElement> & Pick<SlideElement, "type" | "content">): SlideElement {
+export function makeEl(e: Partial<SlideElement> & Pick<SlideElement, "type" | "content">): SlideElement {
   return {
     id: uid("el"),
     x: SAFE_MARGIN,
@@ -57,12 +57,12 @@ function el(e: Partial<SlideElement> & Pick<SlideElement, "type" | "content">): 
   };
 }
 
-function chrome(tpl: TemplatePreset, brand: BrandKit, h: number, index: number, total: number, opts: { watermark: boolean; progress: boolean }): SlideElement[] {
+export function chrome(tpl: TemplatePreset, brand: BrandKit, h: number, index: number, total: number, opts: { watermark: boolean; progress: boolean }): SlideElement[] {
   const out: SlideElement[] = [];
   if (opts.watermark) {
     if (brand.logos[brand.activeLogoIndex]) {
       out.push(
-        el({
+        makeEl({
           type: "logo",
           content: brand.logos[brand.activeLogoIndex]!,
           x: SAFE_MARGIN,
@@ -77,7 +77,7 @@ function chrome(tpl: TemplatePreset, brand: BrandKit, h: number, index: number, 
       );
     }
     out.push(
-      el({
+      makeEl({
         type: "badge",
         content: brand.handle,
         x: brand.logos[brand.activeLogoIndex] ? SAFE_MARGIN + 82 : SAFE_MARGIN,
@@ -96,7 +96,7 @@ function chrome(tpl: TemplatePreset, brand: BrandKit, h: number, index: number, 
   }
   if (opts.progress) {
     out.push(
-      el({
+      makeEl({
         type: "badge",
         content: `${index + 1} / ${total}`,
         x: 1080 - SAFE_MARGIN - 220,
@@ -143,7 +143,7 @@ export function buildSlide(raw: RawSlideContent, ctx: BuildCtx): Slide {
 
   if (raw.type === "hook") {
     elements.push(
-      el({
+      makeEl({
         type: "badge",
         content: ctx.category,
         x: centered ? (1080 - 320) / 2 : SAFE_MARGIN,
@@ -163,7 +163,7 @@ export function buildSlide(raw: RawSlideContent, ctx: BuildCtx): Slide {
     const hSize = autoFit(raw.title, { width: inner, height: h * 0.44 }, 96, 54);
     const hHeight = textHeight(raw.title, hSize, inner, 1.1);
     elements.push(
-      el({
+      makeEl({
         type: "heading",
         content: raw.title,
         x: SAFE_MARGIN,
@@ -183,7 +183,7 @@ export function buildSlide(raw: RawSlideContent, ctx: BuildCtx): Slide {
     if (raw.body) {
       const bSize = autoFit(raw.body, { width: inner, height: 200 }, 38, 26);
       elements.push(
-        el({
+        makeEl({
           type: "subheading",
           content: raw.body,
           x: SAFE_MARGIN,
@@ -201,7 +201,7 @@ export function buildSlide(raw: RawSlideContent, ctx: BuildCtx): Slide {
       );
     }
     elements.push(
-      el({
+      makeEl({
         type: "shape",
         content: "",
         x: SAFE_MARGIN,
@@ -215,7 +215,7 @@ export function buildSlide(raw: RawSlideContent, ctx: BuildCtx): Slide {
     );
   } else if (raw.type === "code_breakdown") {
     elements.push(
-      el({
+      makeEl({
         type: "subheading",
         content: raw.title,
         x: SAFE_MARGIN,
@@ -234,7 +234,7 @@ export function buildSlide(raw: RawSlideContent, ctx: BuildCtx): Slide {
     const code = raw.code ?? "";
     const codeSize = autoFit(code, { width: inner - 80, height: h * 0.45 }, 32, 18);
     elements.push(
-      el({
+      makeEl({
         type: "code",
         content: code,
         x: SAFE_MARGIN,
@@ -251,7 +251,7 @@ export function buildSlide(raw: RawSlideContent, ctx: BuildCtx): Slide {
   } else if (raw.type === "comparison") {
     const c = raw.compare!;
     elements.push(
-      el({
+      makeEl({
         type: "subheading",
         content: raw.title,
         x: SAFE_MARGIN,
@@ -274,7 +274,7 @@ export function buildSlide(raw: RawSlideContent, ctx: BuildCtx): Slide {
       { title: c.rightTitle, text: c.right, x: SAFE_MARGIN + colW + 40 },
     ].forEach((col, i) => {
       elements.push(
-        el({
+        makeEl({
           type: "shape",
           content: "",
           x: col.x,
@@ -285,7 +285,7 @@ export function buildSlide(raw: RawSlideContent, ctx: BuildCtx): Slide {
           radius: 28,
           zIndex: 3,
         }),
-        el({
+        makeEl({
           type: "subheading",
           content: col.title,
           x: col.x + 36,
@@ -298,7 +298,7 @@ export function buildSlide(raw: RawSlideContent, ctx: BuildCtx): Slide {
           fontFamily: heading,
           zIndex: 6,
         }),
-        el({
+        makeEl({
           type: "body",
           content: col.text,
           x: col.x + 36,
@@ -318,7 +318,7 @@ export function buildSlide(raw: RawSlideContent, ctx: BuildCtx): Slide {
     const cardH = Math.min(640, h * 0.5);
     const cardY = (h - cardH) / 2;
     elements.push(
-      el({
+      makeEl({
         type: "shape",
         content: "",
         x: SAFE_MARGIN,
@@ -332,7 +332,7 @@ export function buildSlide(raw: RawSlideContent, ctx: BuildCtx): Slide {
     );
     if (brand.logos[brand.activeLogoIndex]) {
       elements.push(
-        el({
+        makeEl({
           type: "logo",
           content: brand.logos[brand.activeLogoIndex]!,
           x: (1080 - 140) / 2,
@@ -345,7 +345,7 @@ export function buildSlide(raw: RawSlideContent, ctx: BuildCtx): Slide {
       );
     }
     elements.push(
-      el({
+      makeEl({
         type: "heading",
         content: raw.title,
         x: SAFE_MARGIN + 60,
@@ -360,7 +360,7 @@ export function buildSlide(raw: RawSlideContent, ctx: BuildCtx): Slide {
         fontFamily: heading,
         zIndex: 6,
       }),
-      el({
+      makeEl({
         type: "body",
         content: raw.body ?? `Follow ${brand.handle} for more`,
         x: SAFE_MARGIN + 60,
@@ -373,7 +373,7 @@ export function buildSlide(raw: RawSlideContent, ctx: BuildCtx): Slide {
         fontFamily: body,
         zIndex: 6,
       }),
-      el({
+      makeEl({
         type: "badge",
         content: `Follow ${brand.handle}`,
         x: (1080 - 520) / 2,
@@ -388,7 +388,7 @@ export function buildSlide(raw: RawSlideContent, ctx: BuildCtx): Slide {
         radius: 42,
         zIndex: 6,
       }),
-      el({
+      makeEl({
         type: "icon",
         content: "bookmark",
         x: (1080 - 200) / 2,
@@ -404,7 +404,7 @@ export function buildSlide(raw: RawSlideContent, ctx: BuildCtx): Slide {
     const numbered = layout === "numbered" || layout === "checklist";
     if (numbered) {
       elements.push(
-        el({
+        makeEl({
           type: "badge",
           content: String(index).padStart(2, "0"),
           x: SAFE_MARGIN,
@@ -426,7 +426,7 @@ export function buildSlide(raw: RawSlideContent, ctx: BuildCtx): Slide {
     const tSize = autoFit(raw.title, { width: inner, height: 260 }, 66, 38);
     const tH = textHeight(raw.title, tSize, inner, 1.15);
     elements.push(
-      el({
+      makeEl({
         type: "heading",
         content: raw.title,
         x: SAFE_MARGIN,
@@ -442,7 +442,7 @@ export function buildSlide(raw: RawSlideContent, ctx: BuildCtx): Slide {
         fontFamily: heading,
         zIndex: 5,
       }),
-      el({
+      makeEl({
         type: "shape",
         content: "",
         x: centered ? (1080 - 120) / 2 : SAFE_MARGIN,
@@ -458,7 +458,7 @@ export function buildSlide(raw: RawSlideContent, ctx: BuildCtx): Slide {
     const boxH = h - (titleY + tH + 80) - 180;
     const bSize = autoFit(text, { width: inner, height: boxH }, 40, 24);
     elements.push(
-      el({
+      makeEl({
         type: "body",
         content: text,
         x: SAFE_MARGIN,
