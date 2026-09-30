@@ -1,13 +1,17 @@
 import { toPng, toJpeg } from "html-to-image";
 import { jsPDF } from "jspdf";
 import JSZip from "jszip";
-import FileSaver from "file-saver";
 
-const saveAs = FileSaver.saveAs;
 import type { AspectRatio } from "@/types/carousel";
 import { CANVAS_SIZES } from "@/types/carousel";
 
 const PIXEL_RATIO = 2;
+
+async function saveAs(data: Blob | string, filename: string) {
+  const mod = await import("file-saver");
+  const fn = (mod as unknown as { default?: { saveAs?: typeof mod.saveAs }; saveAs?: typeof mod.saveAs });
+  (fn.saveAs ?? fn.default?.saveAs)!(data as Blob, filename);
+}
 
 function nodeFor(index: number) {
   return document.getElementById(`export-slide-${index}`);
@@ -37,7 +41,7 @@ export async function exportCurrent(
   title: string,
 ) {
   const data = await render(index, ratio, format);
-  saveAs(data, `${slug(title)}-slide-${pad(index)}.${format}`);
+  await saveAs(data, `${slug(title)}-slide-${pad(index)}.${format}`);
 }
 
 export async function exportZip(
@@ -53,7 +57,7 @@ export async function exportZip(
     onProgress(Math.round(((i + 1) / count) * 100));
   }
   const blob = await zip.generateAsync({ type: "blob" });
-  saveAs(blob, `${slug(title)}.zip`);
+  await saveAs(blob, `${slug(title)}.zip`);
 }
 
 export async function exportPdf(
