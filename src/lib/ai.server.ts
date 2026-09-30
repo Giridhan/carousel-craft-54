@@ -42,16 +42,19 @@ export function normalizeSlides(raw: unknown[]): SlideData[] {
   const out: SlideData[] = [];
   raw.forEach((r) => {
     if (!r || typeof r !== "object") return;
-    const o = r as Record<string, unknown>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const o = r as { [K in keyof SlideData]?: any };
     const archetype = ARCHETYPES.includes(o.archetype as (typeof ARCHETYPES)[number])
       ? (o.archetype as SlideData["archetype"])
       : "deep_dive";
     const headline = clean(o.headline, 160);
     if (!headline) return;
-    const ce = o.codeExample as Record<string, unknown> | undefined;
-    const cd = o.comparisonData as Record<string, unknown> | undefined;
-    const ba = o.beforeAfter as Record<string, unknown> | undefined;
-    out.push({
+    const ce = o.codeExample as Record<"code" | "language" | "output", unknown> | undefined;
+    const cd = o.comparisonData as
+      | Record<"leftTitle" | "leftContent" | "rightTitle" | "rightContent", unknown>
+      | undefined;
+    const ba = o.beforeAfter as Record<"before" | "after", unknown> | undefined;
+    const slide = {
       slideNumber: out.length + 1,
       archetype,
       headline,
@@ -85,7 +88,8 @@ export function normalizeSlides(raw: unknown[]): SlideData[] {
       beforeAfter: ba && clean(ba.before) ? { before: clean(ba.before, 240)!, after: clean(ba.after, 240) ?? "" } : undefined,
       icon: clean(o.icon, 20),
       useCase: clean(o.useCase, 240),
-    });
+    };
+    out.push(JSON.parse(JSON.stringify(slide)) as SlideData);
   });
   return out;
 }
