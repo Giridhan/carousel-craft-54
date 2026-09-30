@@ -21,6 +21,8 @@ export interface ArchCtx {
   category: string;
   watermark: boolean;
   progress: boolean;
+  headerScale?: number | undefined;
+  footerScale?: number | undefined;
 }
 
 const MONO = "'JetBrains Mono', ui-monospace, monospace";
@@ -54,7 +56,7 @@ export function buildFromData(d: SlideData, ctx: ArchCtx): Slide {
   const BF = ctx.tpl.typographyPairing.body;
   const centered = ["centered", "billboard", "quote"].includes(ctx.tpl.layoutEngineId);
   const els: SlideElement[] = [
-    ...chrome(ctx.tpl, ctx.brand, h, ctx.index, ctx.total, { watermark: ctx.watermark, progress: ctx.progress }),
+    ...chrome(ctx.tpl, ctx.brand, h, ctx.index, ctx.total, { watermark: ctx.watermark, progress: ctx.progress, headerScale: ctx.headerScale, footerScale: ctx.footerScale }),
   ];
   const top = 170;
   const bottom = h - 140;

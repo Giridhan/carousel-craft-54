@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Layers3, PanelLeft, PanelRight } from "lucide-react";
+import { Check, Layers3, Loader2, PanelLeft, PanelRight, Save } from "lucide-react";
+import { toast } from "sonner";
 import { CANVAS_SIZES } from "@/types/carousel";
 import { useStudio } from "@/store/studio";
 import { LeftPanel } from "@/components/studio/LeftPanel";
@@ -35,7 +36,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Studio() {
-  const { project } = useStudio();
+  const { project, saveStatus, saveProject } = useStudio();
   const { w, h } = CANVAS_SIZES[project.aspectRatio];
   const [leftOpen, setLeftOpen] = useState(false);
   const [rightOpen, setRightOpen] = useState(false);
@@ -67,6 +68,26 @@ function Studio() {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
+          <span className="hidden items-center gap-1 text-xs text-muted-foreground sm:flex" aria-live="polite">
+            {saveStatus === "saving" ? (
+              <><Loader2 className="size-3.5 animate-spin" /> Saving…</>
+            ) : saveStatus === "saved" ? (
+              <><Check className="size-3.5 text-primary" /> Saved</>
+            ) : (
+              <>Unsaved changes</>
+            )}
+          </span>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={saveStatus === "saving"}
+            onClick={async () => {
+              await saveProject();
+              toast.success("Project saved");
+            }}
+          >
+            <Save className="mr-1 size-3.5" /> Save
+          </Button>
           <ExportDialog />
           <Sheet open={rightOpen} onOpenChange={setRightOpen}>
             <SheetTrigger asChild>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Eye, EyeOff, Maximize2 } from "lucide-react";
+import { Eye, EyeOff, Maximize2, Redo2, Undo2 } from "lucide-react";
 import { CANVAS_SIZES, type AspectRatio, type SlideElement } from "@/types/carousel";
 import { useStudio } from "@/store/studio";
 import { SlideRenderer } from "./SlideRenderer";
@@ -21,6 +21,10 @@ export function CanvasStage() {
     showGuides,
     toggleGuides,
     setAspectRatio,
+    undo,
+    redo,
+    past,
+    future,
   } = useStudio();
   const slide = project.slides[activeSlide];
   const { w, h } = CANVAS_SIZES[project.aspectRatio];
@@ -37,9 +41,28 @@ export function CanvasStage() {
       setFitScale(Math.min((node.clientWidth - pad) / w, (node.clientHeight - pad) / h));
     };
     update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
+    const ro = new ResizeObserver(update);
+    if (wrapRef.current) ro.observe(wrapRef.current);
+    return () => ro.disconnect();
   }, [w, h]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName))) return;
+      if (!(e.ctrlKey || e.metaKey)) return;
+      const k = e.key.toLowerCase();
+      if (k === "z" && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      } else if (k === "y" || (k === "z" && e.shiftKey)) {
+        e.preventDefault();
+        redo();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [undo, redo]);
 
   const scale = zoom === "fit" ? fitScale : zoom;
   const selected = slide?.elements.find((e) => e.id === selectedElementId) ?? null;
@@ -105,6 +128,14 @@ export function CanvasStage() {
           {showGuides ? <Eye className="mr-1 size-3.5" /> : <EyeOff className="mr-1 size-3.5" />}
           Safe guides
         </Button>
+        <div className="flex items-center gap-1">
+          <Button size="icon" variant="ghost" className="size-8" disabled={!past.length} onClick={undo} title="Undo (Ctrl+Z)" aria-label="Undo">
+            <Undo2 className="size-4" />
+          </Button>
+          <Button size="icon" variant="ghost" className="size-8" disabled={!future.length} onClick={redo} title="Redo (Ctrl+Y)" aria-label="Redo">
+            <Redo2 className="size-4" />
+          </Button>
+        </div>
         <div className="ml-auto flex items-center gap-1">
           <Button size="sm" variant={zoom === "fit" ? "default" : "ghost"} onClick={() => setZoom("fit")}>
             <Maximize2 className="mr-1 size-3.5" />
@@ -117,6 +148,12 @@ export function CanvasStage() {
           ))}
         </div>
       </div>
+
+      {selected && (
+        <div className="border-b border-border bg-card/60 px-3 py-1.5">
+          <ElementToolbar el={selected} />
+        </div>
+      )}
 
       <div ref={wrapRef} className="relative flex min-h-0 flex-1 items-center justify-center overflow-auto bg-background p-6">
         <div
@@ -162,12 +199,6 @@ export function CanvasStage() {
             {showGuides && <SafeGuides width={w} height={h} />}
           </div>
         </div>
-
-        {selected && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center px-3">
-            <ElementToolbar el={selected} />
-          </div>
-        )}
       </div>
     </div>
   );

@@ -55,6 +55,7 @@ export function RightPanel() {
     setBrand,
     brand,
     toggleChrome,
+    setChromeScale,
     autoFix,
     setActiveSlide,
     select,
@@ -186,6 +187,33 @@ export function RightPanel() {
             <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
               <Label className="text-xs">Progress indicator</Label>
               <Switch checked={project.showProgress} onCheckedChange={() => toggleChrome("showProgress")} />
+            </div>
+            <div className="space-y-3 rounded-lg border border-border p-3">
+              <p className="text-xs font-medium">Header &amp; Footer Layout</p>
+              {(
+                [
+                  ["headerScale", "Header height & spacing"],
+                  ["footerScale", "Footer height & spacing"],
+                ] as const
+              ).map(([key, label]) => {
+                const v = project[key] ?? 1;
+                return (
+                  <div key={key} className="space-y-1.5">
+                    <div className="flex justify-between text-[11px] text-muted-foreground">
+                      <span>{label}</span>
+                      <span className="tabular-nums">{Math.round(v * 100)}%</span>
+                    </div>
+                    <Slider
+                      value={[v]}
+                      min={0.6}
+                      max={1.8}
+                      step={0.05}
+                      onValueChange={(x) => setChromeScale(key, x[0] ?? 1)}
+                    />
+                  </div>
+                );
+              })}
+              <p className="text-[10px] text-muted-foreground">Applies to every slide at once.</p>
             </div>
           </div>
         </TabsContent>
