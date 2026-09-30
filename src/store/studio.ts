@@ -192,7 +192,7 @@ export const useStudio = create<StudioState>((set, get) => {
     deleteBrandKit: (id) => {
       const rest = get().brandKits.filter((b) => b.id !== id);
       const kits = rest.length ? rest : [DEFAULT_BRAND];
-      set({ brandKits: kits, activeBrandKitId: kits[0].id });
+      set({ brandKits: kits, activeBrandKitId: kits[0]!.id });
       persist();
     },
 
@@ -258,10 +258,12 @@ export const useStudio = create<StudioState>((set, get) => {
 
     duplicateSlide: (i) =>
       withSlides((s) => {
+        const src = s[i];
+        if (!src) return s;
         const copy: Slide = {
-          ...s[i],
+          ...src,
           id: uid("slide"),
-          elements: s[i].elements.map((e) => ({ ...e, id: uid("el") })),
+          elements: src.elements.map((e) => ({ ...e, id: uid("el") })),
         };
         s.splice(i + 1, 0, copy);
         return s;
@@ -276,7 +278,7 @@ export const useStudio = create<StudioState>((set, get) => {
     reorderSlides: (from, to) =>
       withSlides((s) => {
         const [m] = s.splice(from, 1);
-        s.splice(to, 0, m);
+        if (m) s.splice(to, 0, m);
         return s;
       }),
 
