@@ -41,9 +41,10 @@ export function CanvasStage() {
       setFitScale(Math.min((node.clientWidth - pad) / w, (node.clientHeight - pad) / h));
     };
     update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, [w, h, !!selected]);
+    const ro = new ResizeObserver(update);
+    if (wrapRef.current) ro.observe(wrapRef.current);
+    return () => ro.disconnect();
+  }, [w, h]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
