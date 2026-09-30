@@ -8,8 +8,8 @@ export const COLOR_THEMES: ColorTheme[] = [
     bgCss: "#0b1020",
     fg: "#f8fafc",
     muted: "#94a3b8",
-    accent: "#6366f1",
-    accentFg: "#ffffff",
+    accent: "#a5b4fc",
+    accentFg: "#0b1020",
     surface: "#151c33",
   },
   {
