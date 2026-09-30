@@ -116,12 +116,14 @@ export function buildFromData(d: SlideData, ctx: ArchCtx): Slide {
 
   const pill = (
     content: string | undefined,
-    o: { bg: string; fg: string; x?: number; key?: string; size?: number; hh?: number; advance?: boolean },
+    o: { bg: string; fg: string; x?: number; key?: string; size?: number; hh?: number; advance?: boolean; maxW?: number },
   ) => {
     if (!content) return 0;
-    const size = o.size ?? 24;
+    let size = o.size ?? 24;
     const hh = o.hh ?? 56;
-    const w = Math.min(W, Math.ceil(content.length * (size * 0.66 + 1.2)) + 72);
+    const maxW = o.maxW ?? W;
+    while (size > 16 && Math.ceil(content.length * (size * 0.66 + 1.2)) + 72 > maxW) size -= 1;
+    const w = Math.min(maxW, Math.ceil(content.length * (size * 0.66 + 1.2)) + 72);
     push({
       type: "badge",
       content,
@@ -208,7 +210,7 @@ export function buildFromData(d: SlideData, ctx: ArchCtx): Slide {
       const lang = d.codeExample?.language ?? "code";
       pill(d.headerBadge ?? lang.toUpperCase(), { bg: t.accent, fg: t.accentFg, key: "headerBadge", size: 22, hh: 50 });
       text(d.headline, { type: "heading", size: 60, min: 36, weight: 800, lh: 1.1, font: HF, maxH: 150 * s, key: "headline", gap: 16 * s, ls: -0.5 });
-      text(d.definition, { size: 30, min: 22, color: t.muted, maxH: 90 * s, key: "definition", lh: 1.35, gap: 22 * s });
+      text(d.definition, { size: 30, min: 24, color: t.muted, maxH: 90 * s, key: "definition", lh: 1.35, gap: 22 * s });
       if (d.syntaxSnippet) {
         const start = y;
         y += 20;
@@ -340,7 +342,7 @@ export function buildFromData(d: SlideData, ctx: ArchCtx): Slide {
       const size = Math.min(...listText.map((lt) => fit(lt || " ", colW - 60, listMax, 30, 18, 1.55)));
       cols.forEach((cl, i) => {
         y = start + 26;
-        pill(cl.title, { bg: cl.col.bg, fg: cl.col.fg, x: cl.x + 26, size: 24, hh: 52, key: `comparisonData.${cl.side}Title` });
+        pill(cl.title, { bg: cl.col.bg, fg: cl.col.fg, x: cl.x + 26, size: 24, hh: 52, maxW: colW - 52, key: `comparisonData.${cl.side}Title` });
         const lt = listText[i]!;
         if (lt) {
           const hh = Math.ceil(textHeight(lt, size, colW - 60, 1.55)) + 2;
