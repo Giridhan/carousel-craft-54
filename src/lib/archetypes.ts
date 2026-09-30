@@ -121,7 +121,7 @@ export function buildFromData(d: SlideData, ctx: ArchCtx): Slide {
     if (!content) return 0;
     const size = o.size ?? 24;
     const hh = o.hh ?? 56;
-    const w = Math.min(W, Math.ceil(content.length * size * 0.6) + 72);
+    const w = Math.min(W, Math.ceil(content.length * (size * 0.66 + 1.2)) + 72);
     push({
       type: "badge",
       content,
