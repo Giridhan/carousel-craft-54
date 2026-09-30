@@ -126,7 +126,7 @@ export function LeftPanel() {
 
           <div className="space-y-2">
             <Label>Slides: {count}</Label>
-            <Slider value={[count]} min={3} max={10} step={1} onValueChange={([v]) => setCount(v)} />
+            <Slider value={[count]} min={3} max={10} step={1} onValueChange={(v) => setCount(v[0] ?? count)} />
           </div>
 
           <div className="space-y-2">

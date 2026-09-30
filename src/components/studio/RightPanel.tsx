@@ -106,7 +106,7 @@ export function RightPanel() {
                   value={[(el.opacity ?? 1) * 100]}
                   min={10}
                   max={100}
-                  onValueChange={([v]) => updateElement(el.id, { opacity: v / 100 })}
+                  onValueChange={(v) => updateElement(el.id, { opacity: (v[0] ?? 100) / 100 })}
                 />
               </div>
               <div className="space-y-1">
@@ -115,7 +115,7 @@ export function RightPanel() {
                   value={[el.letterSpacing ?? 0]}
                   min={-5}
                   max={20}
-                  onValueChange={([v]) => updateElement(el.id, { letterSpacing: v })}
+                  onValueChange={(v) => updateElement(el.id, { letterSpacing: v[0] ?? 0 })}
                 />
               </div>
               <div className="space-y-1">
@@ -124,7 +124,7 @@ export function RightPanel() {
                   value={[(el.lineHeight ?? 1.25) * 100]}
                   min={90}
                   max={220}
-                  onValueChange={([v]) => updateElement(el.id, { lineHeight: v / 100 })}
+                  onValueChange={(v) => updateElement(el.id, { lineHeight: (v[0] ?? 125) / 100 })}
                 />
               </div>
               <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">

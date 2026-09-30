@@ -1,8 +1,8 @@
 export interface RawSlideContent {
   type: "hook" | "content" | "code_breakdown" | "comparison" | "cta";
   title: string;
-  body?: string;
-  code?: string;
+  body?: string | undefined;
+  code?: string | undefined;
   compare?: { leftTitle: string; left: string; rightTitle: string; right: string };
 }
 

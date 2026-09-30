@@ -64,7 +64,7 @@ function chrome(tpl: TemplatePreset, brand: BrandKit, h: number, index: number, 
       out.push(
         el({
           type: "logo",
-          content: brand.logos[brand.activeLogoIndex],
+          content: brand.logos[brand.activeLogoIndex]!,
           x: SAFE_MARGIN,
           y: 56,
           width: 64,
@@ -332,7 +332,7 @@ export function buildSlide(raw: RawSlideContent, ctx: BuildCtx): Slide {
       elements.push(
         el({
           type: "logo",
-          content: brand.logos[brand.activeLogoIndex],
+          content: brand.logos[brand.activeLogoIndex]!,
           x: (1080 - 140) / 2,
           y: cardY + 60,
           width: 140,

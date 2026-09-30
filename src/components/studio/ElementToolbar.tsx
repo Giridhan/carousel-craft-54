@@ -25,7 +25,7 @@ export function ElementToolbar({ el }: { el: SlideElement }) {
           min={12}
           max={140}
           step={1}
-          onValueChange={([v]) => updateElement(el.id, { fontSize: v })}
+          onValueChange={(v) => updateElement(el.id, { fontSize: v[0] ?? el.fontSize })}
         />
         <span className="w-7 text-right text-[11px] tabular-nums text-muted-foreground">{el.fontSize}</span>
       </div>

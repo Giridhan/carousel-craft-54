@@ -131,7 +131,7 @@ function buildTemplates(): TemplatePreset[] {
           layoutEngineId: layout.id,
           tags: [aes.tag, theme.name],
           theme,
-          typographyPairing: TYPO_PAIRINGS[(li + ai + ti) % TYPO_PAIRINGS.length],
+          typographyPairing: TYPO_PAIRINGS[(li + ai + ti) % TYPO_PAIRINGS.length]!,
           backgroundType: aes.bgType,
         });
       });
@@ -143,5 +143,5 @@ function buildTemplates(): TemplatePreset[] {
 export const TEMPLATES: TemplatePreset[] = buildTemplates();
 
 export function getTemplate(id: string): TemplatePreset {
-  return TEMPLATES.find((t) => t.id === id) ?? TEMPLATES[0];
+  return TEMPLATES.find((t) => t.id === id) ?? TEMPLATES[0]!;
 }

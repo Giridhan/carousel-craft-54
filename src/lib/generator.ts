@@ -27,8 +27,8 @@ export function generateRaw(topic: string, count: number, tone: Tone): RawSlideC
   if (entry) {
     const middle = entry.slides.filter((s) => s.type !== "hook" && s.type !== "cta");
     const body = middle.slice(0, Math.max(1, count - 2));
-    while (body.length < count - 2) body.push(middle[body.length % middle.length]);
-    return [entry.slides[0], ...body, entry.slides[entry.slides.length - 1]];
+    while (body.length < count - 2) body.push(middle[body.length % middle.length]!);
+    return [entry.slides[0]!, ...body, entry.slides[entry.slides.length - 1]!];
   }
   const middleCount = Math.max(1, count - 2);
   const slides: RawSlideContent[] = [
@@ -55,7 +55,7 @@ export function generateRaw(topic: string, count: number, tone: Tone): RawSlideC
     slides.push({
       type: "content",
       title: `${String(i + 1).padStart(2, "0")} · Key idea about ${clean.toLowerCase()}`,
-      body: GENERIC_BODIES[i % GENERIC_BODIES.length],
+      body: GENERIC_BODIES[i % GENERIC_BODIES.length]!,
     });
   }
   slides.push({

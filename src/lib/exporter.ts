@@ -47,7 +47,7 @@ export async function exportZip(
   const zip = new JSZip();
   for (let i = 0; i < count; i++) {
     const data = await render(i, ratio, "png");
-    zip.file(`slide-${pad(i)}.png`, data.split(",")[1], { base64: true });
+    zip.file(`slide-${pad(i)}.png`, data.split(",")[1]!, { base64: true });
     onProgress(Math.round(((i + 1) / count) * 100));
   }
   const blob = await zip.generateAsync({ type: "blob" });
