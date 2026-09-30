@@ -151,7 +151,7 @@ export function buildFromData(d: SlideData, ctx: ArchCtx): Slide {
   switch (d.archetype) {
     case "hook": {
       y = top + 50 * s;
-      pill(ctx.category || d.headerBadge, { bg: t.accent, fg: t.accentFg, key: undefined });
+      pill(ctx.category || d.headerBadge, { bg: t.accent, fg: t.accentFg });
       text(d.headline, {
         type: "heading",
         size: 104,
