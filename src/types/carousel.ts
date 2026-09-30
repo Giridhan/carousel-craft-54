@@ -117,6 +117,8 @@ export interface CarouselProject {
   brandKitId: string;
   showWatermark: boolean;
   showProgress: boolean;
+  headerScale?: number;
+  footerScale?: number;
 }
 
 export type TemplateCategory =

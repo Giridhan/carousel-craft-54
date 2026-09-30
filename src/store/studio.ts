@@ -15,6 +15,8 @@ import { autoFixProject } from "@/lib/preflight";
 
 const BRAND_KEY = "carouselfy.brandkits";
 const PROJECT_KEY = "carouselfy.project.v2";
+const SAVED_KEY = "carouselfy.saved-projects";
+const HISTORY_LIMIT = 100;
 
 export const DEFAULT_BRAND: BrandKit = {
   id: "bk_default",
@@ -142,17 +144,43 @@ interface StudioState {
   pushLog: (l: string) => void;
   setGenerating: (g: boolean) => void;
   autoFix: () => void;
+
+  past: CarouselProject[];
+  future: CarouselProject[];
+  undo: () => void;
+  redo: () => void;
+  saveStatus: "saved" | "unsaved" | "saving";
+  lastSavedAt: number | null;
+  saveProject: () => Promise<void>;
+  setChromeScale: (key: "headerScale" | "footerScale", v: number) => void;
 }
 
 const initialBrands = load<BrandKit[]>(BRAND_KEY, [DEFAULT_BRAND]);
-const initialProject = load<CarouselProject | null>(PROJECT_KEY, null);
+const savedBundle = load<{ project: CarouselProject; brandKits: BrandKit[]; activeBrandKitId: string; savedAt: number } | null>(SAVED_KEY, null);
+const initialProject = load<CarouselProject | null>(PROJECT_KEY, null) ?? savedBundle?.project ?? null;
 
 export const useStudio = create<StudioState>((set, get) => {
+  let lastSnap = 0;
+  let lastSnapKey = "";
+  // Push the current project onto the undo stack. Rapid edits of the same kind
+  // (e.g. dragging) within 500ms are coalesced into one history step.
+  const snapshot = (key = "") => {
+    const now = Date.now();
+    if (key && key === lastSnapKey && now - lastSnap < 500) {
+      lastSnap = now;
+      return;
+    }
+    lastSnap = now;
+    lastSnapKey = key;
+    set({ past: [...get().past, get().project].slice(-HISTORY_LIMIT), future: [] });
+  };
   const persist = () => {
     save(BRAND_KEY, get().brandKits);
     save(PROJECT_KEY, get().project);
+    if (get().saveStatus !== "unsaved") set({ saveStatus: "unsaved" });
   };
-  const withSlides = (fn: (slides: Slide[]) => Slide[]) => {
+  const withSlides = (fn: (slides: Slide[]) => Slide[], key = "") => {
+    snapshot(key);
     const p = get().project;
     const slides = fn([...p.slides]).map((s, i) => ({ ...s, slideNumber: i + 1 }));
     set({ project: { ...p, slides } });
@@ -180,6 +208,10 @@ export const useStudio = create<StudioState>((set, get) => {
     genLog: [],
     apiKey: "",
     apiProvider: "openai",
+    past: [],
+    future: [],
+    saveStatus: savedBundle ? "saved" : "unsaved",
+    lastSavedAt: savedBundle?.savedAt ?? null,
 
     brand: () => get().brandKits.find((b) => b.id === get().activeBrandKitId) ?? DEFAULT_BRAND,
     setBrand: (patch) => {
@@ -207,17 +239,20 @@ export const useStudio = create<StudioState>((set, get) => {
     },
 
     setProject: (p) => {
+      snapshot();
       set({ project: p });
       persist();
     },
 
     generate: (topic, count, tone, ai) => {
+      snapshot();
       const p = makeProject(topic, count, tone, get().project.templateId, get().brand(), get().project.aspectRatio, ai);
       set({ project: p, activeSlide: 0, selectedElementId: null });
       persist();
     },
 
     applyTemplate: (templateId) => {
+      snapshot("template");
       const p = get().project;
       const tpl = getTemplate(templateId);
       const slides = reflowSlides(p.slides, {
@@ -227,6 +262,8 @@ export const useStudio = create<StudioState>((set, get) => {
         category: p.category ?? categoryFor(p.topic),
         watermark: p.showWatermark,
         progress: p.showProgress,
+        headerScale: p.headerScale,
+        footerScale: p.footerScale,
       });
       set({ project: { ...p, templateId, slides }, selectedElementId: null });
       persist();
@@ -267,6 +304,8 @@ export const useStudio = create<StudioState>((set, get) => {
           category: p.category ?? categoryFor(p.topic),
           watermark: p.showWatermark,
           progress: p.showProgress,
+          headerScale: p.headerScale,
+          footerScale: p.footerScale,
         },
       );
       withSlides((s) => [...s, slide]);
@@ -304,7 +343,8 @@ export const useStudio = create<StudioState>((set, get) => {
     select: (id) => set({ selectedElementId: id }),
 
     updateElement: (id, patch) =>
-      withSlides((s) =>
+      withSlides(
+        (s) =>
         s.map((sl, idx) =>
           idx === get().activeSlide
             ? (() => {
@@ -317,6 +357,7 @@ export const useStudio = create<StudioState>((set, get) => {
               })()
             : sl,
         ),
+        `el:${id}:${Object.keys(patch).sort().join(",")}`,
       ),
 
     addElement: (type, content) => {
@@ -392,7 +433,67 @@ export const useStudio = create<StudioState>((set, get) => {
     pushLog: (l) => set({ genLog: [...get().genLog, l] }),
     setGenerating: (g) => set({ generating: g, genLog: g ? [] : get().genLog }),
     autoFix: () => {
+      snapshot();
       set({ project: autoFixProject(get().project) });
+      persist();
+    },
+    undo: () => {
+      const past = get().past;
+      const prev = past[past.length - 1];
+      if (!prev) return;
+      lastSnapKey = "";
+      const slides = prev.slides.length;
+      set({
+        past: past.slice(0, -1),
+        future: [get().project, ...get().future].slice(0, HISTORY_LIMIT),
+        project: prev,
+        selectedElementId: null,
+        activeSlide: Math.min(get().activeSlide, slides - 1),
+      });
+      persist();
+    },
+    redo: () => {
+      const [next, ...rest] = get().future;
+      if (!next) return;
+      lastSnapKey = "";
+      set({
+        future: rest,
+        past: [...get().past, get().project].slice(-HISTORY_LIMIT),
+        project: next,
+        selectedElementId: null,
+        activeSlide: Math.min(get().activeSlide, next.slides.length - 1),
+      });
+      persist();
+    },
+    saveProject: async () => {
+      set({ saveStatus: "saving" });
+      const savedAt = Date.now();
+      save(SAVED_KEY, {
+        project: get().project,
+        brandKits: get().brandKits,
+        activeBrandKitId: get().activeBrandKitId,
+        savedAt,
+      });
+      save(BRAND_KEY, get().brandKits);
+      save(PROJECT_KEY, get().project);
+      await new Promise((r) => setTimeout(r, 350));
+      set({ saveStatus: "saved", lastSavedAt: savedAt });
+    },
+    setChromeScale: (key, v) => {
+      snapshot(`chrome:${key}`);
+      const p = { ...get().project, [key]: v };
+      const tpl = getTemplate(p.templateId);
+      const slides = reflowSlides(p.slides, {
+        tpl,
+        brand: get().brand(),
+        ratio: p.aspectRatio,
+        category: p.category ?? categoryFor(p.topic),
+        watermark: p.showWatermark,
+        progress: p.showProgress,
+        headerScale: p.headerScale,
+        footerScale: p.footerScale,
+      });
+      set({ project: { ...p, slides } });
       persist();
     },
   };

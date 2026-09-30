@@ -57,8 +57,11 @@ export function makeEl(e: Partial<SlideElement> & Pick<SlideElement, "type" | "c
   };
 }
 
-export function chrome(tpl: TemplatePreset, brand: BrandKit, h: number, index: number, total: number, opts: { watermark: boolean; progress: boolean }): SlideElement[] {
+export function chrome(tpl: TemplatePreset, brand: BrandKit, h: number, index: number, total: number, opts: { watermark: boolean; progress: boolean; headerScale?: number | undefined; footerScale?: number | undefined }): SlideElement[] {
   const out: SlideElement[] = [];
+  const hs = opts.headerScale ?? 1;
+  const fs = opts.footerScale ?? 1;
+  const r = Math.round;
   if (opts.watermark) {
     if (brand.logos[brand.activeLogoIndex]) {
       out.push(
@@ -66,10 +69,10 @@ export function chrome(tpl: TemplatePreset, brand: BrandKit, h: number, index: n
           type: "logo",
           content: brand.logos[brand.activeLogoIndex]!,
           x: SAFE_MARGIN,
-          y: 56,
-          width: 64,
-          height: 64,
-          radius: 32,
+          y: r(56 * hs),
+          width: r(64 * hs),
+          height: r(64 * hs),
+          radius: r(32 * hs),
           isBrandElement: true,
           isLocked: true,
           zIndex: 40,
@@ -80,11 +83,11 @@ export function chrome(tpl: TemplatePreset, brand: BrandKit, h: number, index: n
       makeEl({
         type: "badge",
         content: brand.handle,
-        x: brand.logos[brand.activeLogoIndex] ? SAFE_MARGIN + 82 : SAFE_MARGIN,
-        y: 70,
-        width: 420,
-        height: 40,
-        fontSize: 26,
+        x: brand.logos[brand.activeLogoIndex] ? SAFE_MARGIN + r(82 * hs) : SAFE_MARGIN,
+        y: r(68 * hs),
+        width: r(420 * hs),
+        height: r(40 * hs),
+        fontSize: r(26 * hs),
         fontWeight: 600,
         color: tpl.theme.muted,
         backgroundColor: "transparent",
@@ -99,11 +102,11 @@ export function chrome(tpl: TemplatePreset, brand: BrandKit, h: number, index: n
       makeEl({
         type: "badge",
         content: `${index + 1} / ${total}`,
-        x: 1080 - SAFE_MARGIN - 220,
-        y: h - 110,
-        width: 220,
-        height: 44,
-        fontSize: 24,
+        x: 1080 - SAFE_MARGIN - r(220 * fs),
+        y: h - r(110 * fs),
+        width: r(220 * fs),
+        height: r(44 * fs),
+        fontSize: r(24 * fs),
         fontWeight: 600,
         textAlign: "right",
         color: tpl.theme.muted,
@@ -125,6 +128,8 @@ interface BuildCtx {
   category: string;
   watermark: boolean;
   progress: boolean;
+  headerScale?: number | undefined;
+  footerScale?: number | undefined;
 }
 
 export function buildSlide(raw: RawSlideContent, ctx: BuildCtx): Slide {
@@ -138,7 +143,7 @@ export function buildSlide(raw: RawSlideContent, ctx: BuildCtx): Slide {
   const align: SlideElement["textAlign"] = centered ? "center" : "left";
   const inner = 1080 - SAFE_MARGIN * 2;
 
-  const elements: SlideElement[] = [...chrome(tpl, brand, h, index, total, { watermark: ctx.watermark, progress: ctx.progress })];
+  const elements: SlideElement[] = [...chrome(tpl, brand, h, index, total, { watermark: ctx.watermark, progress: ctx.progress, headerScale: ctx.headerScale, footerScale: ctx.footerScale })];
   const top = 210;
 
   if (raw.type === "hook") {
