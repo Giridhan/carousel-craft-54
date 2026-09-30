@@ -270,12 +270,14 @@ export const useStudio = create<StudioState>((set, get) => {
     },
 
     setAspectRatio: (r) => {
+      snapshot("template");
       const p = { ...get().project, aspectRatio: r };
       set({ project: p });
       get().applyTemplate(p.templateId);
     },
 
     toggleChrome: (key) => {
+      snapshot("template");
       const p = { ...get().project, [key]: !get().project[key] };
       set({ project: p });
       get().applyTemplate(p.templateId);

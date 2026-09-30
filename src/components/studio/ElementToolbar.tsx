@@ -17,7 +17,7 @@ export function ElementToolbar({ el }: { el: SlideElement }) {
   const { updateElement, duplicateElement, deleteElement, reorderElement } = useStudio();
 
   return (
-    <div className="pointer-events-auto flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card/95 p-2 shadow-xl backdrop-blur">
+    <div className="flex flex-wrap items-center gap-2">
       <div className="flex w-36 items-center gap-2 px-1">
         <span className="text-[10px] uppercase text-muted-foreground">Size</span>
         <Slider
