@@ -110,6 +110,7 @@ export interface CarouselProject {
   id: string;
   title: string;
   topic: string;
+  category?: string;
   aspectRatio: AspectRatio;
   templateId: string;
   slides: Slide[];
