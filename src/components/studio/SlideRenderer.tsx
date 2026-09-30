@@ -1,19 +1,73 @@
-import { Bookmark, Send, Heart } from "lucide-react";
+import {
+  Bookmark,
+  Boxes,
+  Cloud,
+  Code2,
+  Cpu,
+  Database,
+  Heart,
+  Layers,
+  Lightbulb,
+  Send,
+  Shield,
+  Sparkles,
+  Workflow,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
+import Prism from "prismjs";
+import "prismjs/components/prism-python";
+import "prismjs/components/prism-typescript";
+import "prismjs/components/prism-sql";
+import "prismjs/components/prism-apex";
+import "prismjs/components/prism-rust";
+import "prismjs/components/prism-go";
+import "prismjs/components/prism-java";
+import "prismjs/components/prism-bash";
 import type { Slide, SlideElement } from "@/types/carousel";
 
-const KEYWORDS =
-  /\b(def|return|import|from|for|while|if|else|elif|class|new|const|let|var|function|public|private|static|void|Map|List|SELECT|FROM|WHERE|IN|null|true|false|self)\b/g;
+const LANG_ALIAS: Record<string, string> = {
+  js: "javascript",
+  ts: "typescript",
+  py: "python",
+  sh: "bash",
+  shell: "bash",
+  apex: "apex",
+  salesforce: "apex",
+  golang: "go",
+};
 
-function highlight(code: string) {
-  const escaped = code
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-  return escaped
-    .replace(/(#[^\n]*|\/\/[^\n]*)/g, '<span style="color:#64748b">$1</span>')
-    .replace(/('[^']*'|"[^"]*")/g, '<span style="color:#86efac">$1</span>')
-    .replace(KEYWORDS, '<span style="color:#c084fc">$1</span>')
-    .replace(/\b(\d+)\b/g, '<span style="color:#fca5a5">$1</span>');
+function highlight(code: string, language?: string) {
+  const lang = LANG_ALIAS[language?.toLowerCase() ?? ""] ?? language?.toLowerCase() ?? "";
+  const grammar = Prism.languages[lang];
+  if (grammar) return Prism.highlight(code, grammar, lang);
+  return code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+const ICONS: Record<string, LucideIcon> = {
+  layers: Layers,
+  cpu: Cpu,
+  lightbulb: Lightbulb,
+  database: Database,
+  shield: Shield,
+  zap: Zap,
+  code: Code2,
+  workflow: Workflow,
+  boxes: Boxes,
+  cloud: Cloud,
+  sparkles: Sparkles,
+};
+
+function renderRich(text: string) {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
+    part.startsWith("**") && part.endsWith("**") ? (
+      <strong key={i} style={{ fontWeight: 800 }}>
+        {part.slice(2, -2)}
+      </strong>
+    ) : (
+      <span key={i}>{part}</span>
+    ),
+  );
 }
 
 interface Props {
@@ -100,6 +154,13 @@ export function SlideRenderer({
               }}
             />
           );
+        } else if (el.type === "icon" && el.content !== "bookmark" && ICONS[el.content]) {
+          const Ico = ICONS[el.content]!;
+          inner = (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: el.color }}>
+              <Ico size={Math.min(el.width, el.height)} strokeWidth={2} />
+            </div>
+          );
         } else if (el.type === "icon") {
           inner = (
             <div
@@ -146,18 +207,47 @@ export function SlideRenderer({
                   />
                 ))}
               </div>
-              <pre
+                {el.language && (
+                  <span
+                    style={{
+                      marginLeft: "auto",
+                      fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+                      fontSize: 20,
+                      color: "#94a3b8",
+                      textTransform: "lowercase",
+                    }}
+                  >
+                    {el.language}
+                  </span>
+                )}
+              </div>
+              <div
+                className="cf-code"
                 style={{
-                  margin: 0,
-                  padding: "28px 32px",
+                  display: "flex",
+                  padding: "24px 32px 24px 20px",
                   fontFamily: "'JetBrains Mono', ui-monospace, monospace",
                   fontSize: el.fontSize,
                   lineHeight: 1.55,
-                  color: el.color,
-                  whiteSpace: "pre-wrap",
                 }}
-                dangerouslySetInnerHTML={{ __html: highlight(el.content) }}
-              />
+              >
+                <pre
+                  aria-hidden
+                  style={{
+                    margin: 0,
+                    paddingRight: 20,
+                    textAlign: "right",
+                    color: "#475569",
+                    userSelect: "none",
+                    font: "inherit",
+                  }}
+                >
+                  {el.content.split("\n").map((_, i) => i + 1).join("\n")}
+                </pre>
+                <pre
+                  style={{ margin: 0, flex: 1, minWidth: 0, color: el.color, whiteSpace: "pre-wrap", font: "inherit" }}
+                  dangerouslySetInnerHTML={{ __html: highlight(el.content, el.language) }}
+                />
             </div>
           );
         } else {
@@ -198,7 +288,7 @@ export function SlideRenderer({
                 }}
               />
             ) : (
-              <div style={textStyle}>{el.content}</div>
+              <div style={textStyle}>{el.rich ? <span>{renderRich(el.content)}</span> : el.content}</div>
             );
         }
 
